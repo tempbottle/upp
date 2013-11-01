@@ -387,15 +387,7 @@ double GetCpuTemperature() {
 	return Null;
 }
 #endif
-/*
-String GetMacAddress() {
-	Array <NetAdapter> ret = GetAdapterInfo();	
-	if (!ret.IsEmpty())
-		return ret[0].mac;
-	else
-		return Null;
-}
-*/
+
 
 void NetAdapter::Copy(const NetAdapter& src) {
 	description <<= src.description;
@@ -480,7 +472,7 @@ static double GetCpuTemperatureACPI() {
 			if (ff.IsDirectory()) {
 				String name = ff.GetName();
 				if (name != "." && name != "..") {
-					StringParse str = LoadFile_Safe(AppendFileName(AppendFileName("/proc/acpi/thermal_zone", name), "temperature"));			
+					StringParse str = LoadFile_Safe(AppendFileName("/proc/acpi/thermal_zone", name, "temperature"));			
 					str.GoAfter("temperature:");
 					return str.GetDouble();
 				}
@@ -491,27 +483,26 @@ static double GetCpuTemperatureACPI() {
 }
 
 static double GetCpuTemperatureHWMON() {
-	Vector <double> temps;
+	double sumTemps = 0.;
+	int count = 0;
 	for (FindFile ff("/sys/class/hwmon/hwmon0/device/*input"); ff; ff.Next()) {
 		if (!ff.IsHidden()) {
 			String temp = LoadFile_Safe(ff.GetPath());
-			if (!temp.IsEmpty())
-				temps.Add((double)StrInt(temp) / 1000.0);
+			if (!temp.IsEmpty()) {
+				sumTemps += double(StrInt(temp))/1000.;
+				count++;
+			}
 		}
 	}
-	if (temps.IsEmpty())
+	if (count == 0)
 		return Null;
-	double sumTemps = 0.;
-	for (int i = 0; i < temps.GetCount(); i++)
-		sumTemps += temps[i];
-	
-	return sumTemps/double(temps.GetCount());
+	return sumTemps/count;
 }
 
 double GetCpuTemperature()  {
-	double temp = GetCpuTemperatureACPI();
+	double temp = GetCpuTemperatureHWMON();
 	if (IsNull(temp)) 
-		temp = GetCpuTemperatureHWMON();
+		temp = GetCpuTemperatureACPI();
 	
 	return temp;
 }

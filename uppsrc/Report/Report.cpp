@@ -2,6 +2,8 @@
 
 NAMESPACE_UPP
 
+#define LLOG(x) DLOG(x)
+
 Report::Report()
 {
 	mg.x = mg.y = Null;
@@ -51,15 +53,24 @@ void Report::PaintHF(Draw& w, int y, const char *qtf, int i)
 	txt.Paint(w, 0, y, GetSize().cx);
 }
 
+void Report::Flush()
+{
+	if(pagei >= 0) {
+		Drawing dw = GetResult();
+		page.At(pagei).Append(dw);
+		Create(GetSize());
+	}
+}
+
 void Report::StartPage(int i)
 {
-	DrawingDraw dw;
-	PaintHF(dw, 0, header, i);
-	PaintHF(dw, GetSize().cy - footercy, footer, i);
-	Drawing& g = page.At(i);
-	g = dw;
-	g.SetSize(GetSize());
+	DrawingDraw dw(GetSize());
+	page.At(i) = dw;
+	LLOG("Creating page " << i);
 	Create(GetSize());
+	WhenPage();
+	PaintHF(*this, 0, header, i);
+	PaintHF(*this, GetSize().cy - footercy, footer, i);
 	y = GetPageRect().top;
 }
 
@@ -72,7 +83,6 @@ Draw& Report::Page(int i)
 		while(page.GetCount() <= pagei)
 			StartPage(page.GetCount());
 		y = GetPageRect().top;
-		Create(GetSize());
 	}
 	return *this;
 }
@@ -121,19 +131,17 @@ Report& Report::Footer(const char *qtf, int spc)
 	return *this;
 }
 
+Report& Report::OnPage(Callback whenpage)
+{
+	WhenPage = whenpage;
+	RestartPage();
+	return *this;
+}
+
 void Report::RestartPage()
 {
 	page.SetCount(pagei + 1);
 	StartPage(pagei);
-}
-
-void Report::Flush()
-{
-	if(pagei >= 0) {
-		Drawing dw = GetResult();
-		page.At(pagei).Append(dw);
-		Create(GetSize());
-	}
 }
 
 Report& Report::Landscape()

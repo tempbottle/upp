@@ -13,7 +13,7 @@ GUI_APP_MAIN
 	r << t_("輸出表格式報表：");
 	String tab;
 	tab << "{{1:1:1:1:1:1:2 A:: B:: C:: D:: E:: F:: G (wider)";
-	for(int row = 0; row < 200; row++)
+	for(int row = 0; row < 30; row++)
 		for(int column = 0; column < 7; column++)
 			tab << ":: " << row << ":" << column << t_("測試");
 	r << tab;

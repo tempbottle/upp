@@ -13,8 +13,19 @@ topic "Internet utility";
 [ {{10000@(113.42.0) [s0;%% [*@7;4 Internet format utility functions]]}}&]
 [s3; &]
 [s5;:WwwFormat`(Time`): [_^String^ String]_[* WwwFormat]([_^Time^ Time]_[*@3 tm])&]
-[s2;%% Returns Time in format commonly used in HTTP and other internet 
-protocol, like `"Sun, 15 Apr 2012 16:00:25 GMT`".&]
+[s2;%% Returns Time in format defined by RFC2822, commonly used in 
+HTTP and other internet protocol, like `"Sun, 15 Apr 2012 16:00:25 
+GMT`".&]
+[s3;%% &]
+[s4; &]
+[s5;:ScanWwwTime`(const char`*`,Time`&`): [@(0.0.255) bool]_[* ScanWwwTime]([@(0.0.255) con
+st]_[@(0.0.255) char]_`*[*@3 s], [_^Time^ Time][@(0.0.255) `&]_[*@3 tm])&]
+[s2;%% Scans Time format as defined by RFC2822, returns true on success..&]
+[s3;%% &]
+[s4; &]
+[s5;:ScanWwwTime`(const char`*`): [_^Time^ Time]_[* ScanWwwTime]([@(0.0.255) const]_[@(0.0.255) c
+har]_`*[*@3 s])&]
+[s2;%% Scans Time format as defined by RFC2822, returns Null on failure.&]
 [s3;%% &]
 [s4; &]
 [s5;:MIMECharsetName`(byte`): [_^String^ String]_[* MIMECharsetName]([_^byte^ byte]_[*@3 char
@@ -43,6 +54,12 @@ har]_`*[*@3 s], [@(0.0.255) int]_[*@3 len])&]
 tring][@(0.0.255) `&]_[*@3 s])&]
 [s2;%% Decodes data as required by [^http`:`/`/www`.w3`.org`/TR`/html401`/interact`/forms`.html`#h`-17`.13`.4`.1^ M
 IME type application/x`-www`-form`-urlencoded] (see UrlEncode).&]
+[s3;%% &]
+[s4; &]
+[s5;:QPDecode`(const char`*`): [_^String^ String]_[* QPDecode]([@(0.0.255) const]_[@(0.0.255) c
+har]_`*[*@3 s])&]
+[s2;%% Decodes string from [^http`:`/`/en`.wikipedia`.org`/wiki`/Quoted`-printable^ quo
+ted`-printable] format .&]
 [s3;%% &]
 [s4; &]
 [s5;:Base64Encode`(const char`*`,const char`*`): [_^String^ String]_[* Base64Encode]([@(0.0.255) c

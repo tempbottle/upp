@@ -110,7 +110,7 @@ void  PostCallback(Callback cb, void *id = NULL)                { SetTimeCallbac
 class TimeCallback
 {
 public:
-	~TimeCallback()                      { Kill(); }
+	~TimeCallback()                      { Kill(); (void)dummy; }
 
 	void Set(int delay, Callback cb)     { UPP::SetTimeCallback(delay, cb, this); }
 	void Post(Callback cb)               { UPP::PostCallback(cb, this); }
@@ -1210,6 +1210,7 @@ public:
 	static Rect   GetPrimaryScreenArea();
 	static void   GetWorkArea(Array<Rect>& rc);
 	static Rect   GetWorkArea(Point pt);
+	static Rect   GetMouseWorkArea()                     { return GetWorkArea(GetMousePos()); }
 	static int    GetKbdDelay();
 	static int    GetKbdSpeed();
 	static bool   IsAlphaSupported();

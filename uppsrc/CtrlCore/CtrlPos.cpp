@@ -376,7 +376,7 @@ void Ctrl::RemoveFrame(int i) {
 				m.Add().frame = frame[q].frame;
 			else
 				frame[q].frame->FrameRemove();
-	frame = m;
+	frame = pick(m);
 	if(frame.GetCount() == 0)
 		frame.Add().frame = &NullFrame();
 	RefreshFrame();
@@ -413,7 +413,7 @@ void Ctrl::InsertFrame(int i, CtrlFrame& fr)
 		}
 	if(i == n)
 		m.Add().frame = &fr;
-	frame = m;
+	frame = pick(m);
 	fr.FrameAdd(*this);
 	SyncLayout();
 	RefreshFrame();
@@ -485,6 +485,18 @@ Ctrl& Ctrl::HCenterPosZ(int size, int delta) {
 
 Ctrl& Ctrl::VCenterPosZ(int size, int delta) {
 	return VCenterPos(VertLayoutZoom(size), VertLayoutZoom(delta));
+}
+
+Rect Ctrl::GetWorkArea(Point pt)
+{
+	GuiLock __;
+	static Array<Rect> rc;
+	if (rc.IsEmpty())
+		GetWorkArea(rc);
+	for(int i = 0; i < rc.GetCount(); i++)
+		if(rc[i].Contains(pt))
+			return rc[i];
+	return GetPrimaryWorkArea();
 }
 
 END_UPP_NAMESPACE

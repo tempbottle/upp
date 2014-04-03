@@ -250,6 +250,7 @@ class Gdb_MI2 : public Debugger, public ParentCtrl
 		String FormatFrame(MIValue &fInfo, MIValue &fArgs);
 
 		// re-fills frame's droplist when dropping it
+		bool FillDropFrames(int min, int max, bool val);
 		void DropFrames();
 	
 		// shows selected stack frame in editor
@@ -309,7 +310,7 @@ class Gdb_MI2 : public Debugger, public ParentCtrl
 		virtual bool Tip(const String& exp, CodeEditor::MouseTip& mt);
 
 		// create GDB process and initializes it
-		bool Create(One<Host> _host, const String& exefile, const String& cmdline, bool console);
+		bool Create(One<Host> rval_ _host, const String& exefile, const String& cmdline, bool console);
 
 		Gdb_MI2();
 		virtual ~Gdb_MI2();

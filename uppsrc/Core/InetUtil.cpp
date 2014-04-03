@@ -2,17 +2,67 @@
 
 NAMESPACE_UPP
 
+static const char *s_www_month[] = {
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
 String WwwFormat(Time tm)
 {
 	static const char *dayofweek[] =
 	{ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-	static const char *month[] =
-	{ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	return String().Cat()
 		<< dayofweek[DayOfWeek(tm)] << ", "
-		<< (int)tm.day << ' ' << month[tm.month - 1]
+		<< (int)tm.day << ' ' << s_www_month[tm.month - 1]
 		<< ' ' << (int)tm.year
-		<< ' ' << Sprintf("%2d:%02d:%02d +0100", tm.hour, tm.minute, tm.second);
+		<< ' ' << Sprintf("%2d:%02d:%02d " + GetTimeZoneText(), tm.hour, tm.minute, tm.second);
+}
+
+int FindMonth(const String& m)
+{
+	for(int i = 0; i < 12; i++)
+		if(s_www_month[i] == m)
+			return i;
+	return -1;
+}
+
+bool ScanWwwTime(const char *s, Time& tm)
+{
+	CParser p(s);
+	try {
+		if(p.IsId()) { // Skip day of week
+			p.SkipTerm();
+			p.Char(',');
+		}
+		tm.day = p.ReadInt(1, 31);
+		int n = FindMonth(p.ReadId()) + 1;
+		if(n < 1 || n > 12)
+			return false;
+		tm.month = n;
+		tm.year = p.ReadInt(1, 4000);
+		if(tm.year < 50)
+			tm.year += 2000;
+		else
+		if(tm.year < 100)
+			tm.year += 1900;
+		tm.hour = p.ReadInt(0, 23);
+		p.PassChar(':');
+		tm.minute = p.ReadInt(0, 59);
+		if(p.Char(':'))
+		   tm.second = p.ReadInt(0, 59);
+		tm += 60 * (ScanTimeZone(p.GetPtr()) - GetTimeZone());
+	}
+	catch(CParser::Error) {
+		return false;
+	}
+	return tm.IsValid();
+}
+
+Time ScanWwwTime(const char *s)
+{
+	Time tm;
+	if(ScanWwwTime(s, tm))
+		return tm;
+	return Null;
 }
 
 String MIMECharsetName(byte charset)
@@ -117,6 +167,26 @@ String UrlDecode(const char *s, int len)
 String UrlDecode(const String& s)
 {
 	return UrlDecode(~s, s.GetLength());
+}
+
+String QPDecode(const char *s)
+{
+	StringBuffer r;
+	while(*s) {
+		int c = *s++;
+		if(c == '=') {
+			int c1 = '0', c2 = '0';
+			if(*s)
+				c1 = *s++;
+			if(*s)
+				c2 = *s++;
+			if(IsXDigit(c1) && IsXDigit(c2))
+				r.Cat((ctoi(c1) << 4) | ctoi(c2));
+		}
+		else
+			r.Cat(c);
+	}
+	return r;
 }
 
 String Base64Encode(const char *b, const char *e)

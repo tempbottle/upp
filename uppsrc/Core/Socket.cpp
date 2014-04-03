@@ -15,7 +15,7 @@ NAMESPACE_UPP
 #pragma comment(lib, "ws2_32.lib")
 #endif
 
-#define LLOG(x)  // DLOG("TCP " << x)
+#define LLOG(x)  // LOG("TCP " << x)
 
 IpAddrInfo::Entry IpAddrInfo::pool[COUNT];
 
@@ -268,6 +268,7 @@ void TcpSocket::Reset()
 	ptr = end = buffer;
 	is_error = false;
 	is_abort = false;
+	is_timeout = false;
 	mode = NONE;
 	ssl.Clear();
 	sslinfo.Clear();
@@ -429,8 +430,7 @@ void TcpSocket::Linger(int msecs)
 	linger ls;
 	ls.l_onoff = !IsNull(msecs) ? 1 : 0;
 	ls.l_linger = !IsNull(msecs) ? (msecs + 999) / 1000 : 0;
-	if(setsockopt(socket, SOL_SOCKET, SO_LINGER,
-		reinterpret_cast<const char *>(&ls), sizeof(ls)))
+	if(setsockopt(socket, SOL_SOCKET, SO_LINGER, reinterpret_cast<const char *>(&ls), sizeof(ls)))
 		SetSockError("setsockopt(SO_LINGER)");
 }
 
@@ -492,6 +492,23 @@ bool TcpSocket::Connect(const char *host, int port)
 		return false;
 	}
 	return Connect(info);
+}
+
+bool TcpSocket::WaitConnect()
+{
+	if(WaitWrite()) {
+		int optval = 0;
+		socklen_t optlen = sizeof(optval);
+		if (getsockopt(GetSOCKET(), SOL_SOCKET, SO_ERROR, (char*)&optval, &optlen) == 0) {
+			if (optval == 0)
+				return true;
+			else {
+				SetSockError("wait connect", -1, Nvl(String(TcpSocketErrorDesc(optval)), "failed"));
+				return false;
+			}
+		}
+	}
+	return false;
 }
 
 void TcpSocket::RawClose()
@@ -584,7 +601,8 @@ bool TcpSocket::IsGlobalTimeout()
 
 bool TcpSocket::RawWait(dword flags, int end_time)
 { // wait till end_time
-	LLOG("RawWait end_time: " << end_time << ", current time " << msecs());
+	LLOG("RawWait end_time: " << end_time << ", current time " << msecs() << ", to wait: " << end_time - msecs());
+	is_timeout = false;
 	if((flags & WAIT_READ) && ptr != end)
 		return true;
 	if(socket == INVALID_SOCKET)
@@ -602,6 +620,7 @@ bool TcpSocket::RawWait(dword flags, int end_time)
 			tval.tv_sec = to / 1000;
 			tval.tv_usec = 1000 * (to % 1000);
 			tvalp = &tval;
+			LLOG("RawWait timeout: " << to);
 		}
 		fd_set fdsetr[1], fdsetw[1], fdsetx[1];;
 		FD_ZERO(fdsetr);
@@ -624,13 +643,15 @@ bool TcpSocket::RawWait(dword flags, int end_time)
 		#endif
 			return true;
 		}
-		if(IsGlobalTimeout())
+		if(IsGlobalTimeout() || to <= 0 && timeout) {
+			is_timeout = true;
 			return false;
-		if(to <= 0 && timeout)
-			return false;
+		}
 		WhenWait();
-		if(timeout == 0)
+		if(timeout == 0) {
+			is_timeout = true;
 			return false;
+		}
 	}
 }
 
@@ -742,6 +763,11 @@ void TcpSocket::ReadBuffer(int end_time)
 		end = buffer + Recv(buffer, BUFFERSIZE);
 }
 
+bool TcpSocket::IsEof() const
+{
+	return is_eof && ptr == end || IsAbort() || !IsOpen() || IsError();
+}
+
 int TcpSocket::Get_()
 {
 	if(!IsOpen() || IsError() || IsEof() || IsAbort())
@@ -830,10 +856,12 @@ String TcpSocket::GetAll(int len)
 
 String TcpSocket::GetLine(int maxlen)
 {
-	LLOG("GetLine " << maxlen);
+	LLOG("GetLine " << maxlen << ", iseof " << IsEof());
 	String ln;
 	int end_time = GetEndTime();
 	for(;;) {
+		if(IsEof())
+			return String::GetVoid();
 		int c = Peek(end_time);
 		if(c < 0) {
 			if(!IsError())

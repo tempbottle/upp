@@ -180,12 +180,17 @@ struct Pdb : Debugger, ParentCtrl {
 	DbgDisas           disas;
 
 	EditString         watchedit;
+	
+	enum { // Order in this enum has to be same as order of tab.Add
+		TAB_AUTOS, TAB_LOCALS, TAB_THIS, TAB_WATCHES, TAB_EXPLORER, TAB_MEMORY
+	};
 
 	TabCtrl            tab;
 	DropList           threadlist;
 	DropList           framelist;
 	Label              dlock;
 	ArrayCtrl          locals;
+	ArrayCtrl          self;
 	ArrayCtrl          watches;
 	ArrayCtrl          autos;
 	ArrayCtrl          explorer;
@@ -301,9 +306,9 @@ struct Pdb : Debugger, ParentCtrl {
 // data
 	static VectorMap<String, Value> DataMap(const ArrayCtrl& a);
 	static Value Vis(const String& key, const VectorMap<String, Value>& prev,
-	                 pick_ Visual& vis, bool& ch);
+	                 Visual rval_ vis, bool& ch);
 	static void  Vis(ArrayCtrl& a, const String& key,
-	                 const VectorMap<String, Value>& prev, pick_ Visual& vis);
+	                 const VectorMap<String, Value>& prev, Visual rval_ vis);
 
 	void      DisasCursor() {}
 	void      DisasFocus() {}
@@ -311,6 +316,9 @@ struct Pdb : Debugger, ParentCtrl {
 	void      Watches();
 	void      TryAuto(const String& exp, const VectorMap<String, Value>& prev);
 	void      Autos();
+	void      AddThis(const VectorMap<String, Val>& m, adr_t address, const VectorMap<String, Value>& prev);
+	void      AddThis(int type, adr_t address, const VectorMap<String, Value>& prev);
+	void      This();
 	void      Explore(const Val& val, const VectorMap<String, Value>& prev);
 	void      Explore(const String& exp);
 	void      ExploreKey(ArrayCtrl *a);

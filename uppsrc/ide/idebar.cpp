@@ -109,19 +109,24 @@ void Ide::EditSpecial(Bar& menu)
 	    .Help("Copy the current identifier to the clipboard");
 	menu.Add(AK_FORMATCODE, THISBACK(FormatCode))
 	    .Help("Reformat code in editor");
-	menu.Add(AK_TOUPPER, THISBACK(TextToUpper))
+	menu.Add(editor.IsSelection(), AK_TOUPPER, THISBACK(TextToUpper))
 	    .Help("Convert letters in selection to uppercase"); 
-	menu.Add(AK_TOLOWER, THISBACK(TextToLower))
+	menu.Add(editor.IsSelection(), AK_TOLOWER, THISBACK(TextToLower))
 	    .Help("Convert letters in selection to lowercase"); 
-	menu.Add(AK_TOASCII, THISBACK(TextToAscii))
+	menu.Add(editor.IsSelection(), AK_TOASCII, THISBACK(TextToAscii))
 		.Help("Covert text to 7-bit ASCII removing all accents and special symbols");
-	menu.Add(AK_INITCAPS, THISBACK(TextInitCaps))
+	menu.Add(editor.IsSelection(), AK_INITCAPS, THISBACK(TextInitCaps))
 	    .Help("Capitalize the first character of words in selection"); 
-	menu.Add(AK_SWAPCASE, THISBACK(SwapCase))
+	menu.Add(editor.IsSelection(), AK_SWAPCASE, THISBACK(SwapCase))
 	    .Help("Swap the case of letters in selection"); 
-	menu.Add(AK_TOCSTRING, THISBACK(ToCString))
+	menu.Add(editor.IsSelection(), AK_TOCSTRING, THISBACK(ToCString))
 	    .Help("Convert selection to CString");
-}
+	menu.Add(editor.IsSelection(), AK_TOCOMMENT, THISBACK(ToComment))
+		.Help("Comment code");
+	menu.Add(editor.IsSelection(), AK_COMMENTLINES, THISBACK(CommentLines))
+		.Help("Comment code lines");
+	menu.Add(editor.IsSelection(), AK_UNCOMMENT, THISBACK(UnComment))
+		.Help("Uncomment code");}
 
 void Ide::SearchMenu(Bar& menu)
 {
@@ -258,27 +263,32 @@ void Ide::MacroMenu(Bar& menu)
 			for(int o = 0; o < order.GetCount(); o++) {
 				String m = submenu_map.GetKey(order[o]);
 				Vector<int>& mx = submenu_map[order[o]];
+				ValueArray va;
+				for(int i = 0; i < mx.GetCount(); i++)
+					va.Add(mx[i]);
 				if(!IsNull(m))
-					menu.Add(m, THISBACK1(EditMacroMenu, mx));
+					menu.Add(m, THISBACK1(EditMacroMenu, va));
 				else
-					EditMacroMenu(menu, mx);
+					EditMacroMenu(menu, va);
 			}
 		}
 	}
 }
 
-void Ide::EditMacroMenu(Bar& menu, const Vector<int>& mx)
+void Ide::EditMacroMenu(Bar& menu, ValueArray mx)
 {
 	const Array<IdeMacro>& mlist = UscMacros();
 	Vector<String> names;
 	Vector<int> index;
 	names.Reserve(mx.GetCount());
-	for(int i = 0; i < mx.GetCount(); i++)
-		if(mx[i] >= 0 && mx[i] < mlist.GetCount()) {
-			const IdeMacro& m = mlist[mx[i]];
+	for(int i = 0; i < mx.GetCount(); i++) {
+		int ii = mx[i];
+		if(ii >= 0 && ii < mlist.GetCount()) {
+			const IdeMacro& m = mlist[ii];
 			names.Add(Nvl(m.submenu, m.menu));
-			index.Add(mx[i]);
+			index.Add(ii);
 		}
+	}
 	IndexSort(names, index);
 	for(int i = 0; i < index.GetCount(); i++)
 		menu.Add(names[i], THISBACK1(EditMacro, index[i]))

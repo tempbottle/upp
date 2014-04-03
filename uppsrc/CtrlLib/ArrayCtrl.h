@@ -155,7 +155,7 @@ private:
 		bool           IsDisplay() const          { return !ptr.GetBit() && ptr.GetPtr(); }
 		const Display& GetDisplay() const         { ASSERT(IsDisplay()); return *(const Display *)ptr.GetPtr(); }
 
-		CellInfo(pick_ CellInfo& s);
+		CellInfo(CellInfo rval_ s);
 		CellInfo() {}
 		~CellInfo();
 	};
@@ -538,6 +538,8 @@ public:
 
 	void       SetCtrl(int i, int col, Ctrl& ctrl, bool value = true);
 	Ctrl      *GetCtrl(int i, int col);
+	template <class T>
+	T&         CreateCtrl(int i, int col, bool value = true) { T *c = new T; SetCtrl(i, col, c, true, value); return *c; }
 
 	ArrayCtrl& SetLineCy(int cy);
 	void       SetLineCy(int i, int cy);

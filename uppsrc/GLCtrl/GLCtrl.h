@@ -68,8 +68,6 @@ private:
 		friend class GLCtrl;
 		
 		GLCtrl *ctrl;
-		
-		// OpenGL Context
 		GLXContext WindowContext;
 		
 		// Ovverridden method to choose the correct visual
@@ -95,7 +93,6 @@ private:
 		
 		virtual Image MouseEvent(int event, Point p, int zdelta, dword keyflags);
 		
-		// Activates current OpenGL context
 		void ActivateContext();
 	};
 #else
@@ -112,7 +109,7 @@ private:
 		
 		virtual void    State(int reason);
 		virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
-		virtual Image MouseEvent(int event, Point p, int zdelta, dword keyflags);
+		virtual Image   MouseEvent(int event, Point p, int zdelta, dword keyflags);
 		
 		void Init();
 		void Destroy();
@@ -130,16 +127,14 @@ private:
 	int numberOfSamples;
 
 protected:
-	// Overridable methods for derived controls
-
 	// Called after succesful OpenGL initialization
 	virtual void GLInit() {}
 
 	// Called just before OpenGL termination
 	virtual void GLDone() {}
 
-	// Called on resize events
-	virtual void GLResize(int w, int h) {}
+	// Called on resize events, defaults to setting proper view-port
+	virtual void GLResize(int w, int h);
 
 	// Called on paint events
 	virtual void GLPaint() { WhenGLPaint(); }
@@ -165,7 +160,6 @@ public:
 	void StdView();
 	
 	void InitPickMatrix() { picking.InitPickMatrix(); }
-	
 	void Refresh()        { pane.Refresh(); }
 	
 	Vector<int> Pick(int x, int y);

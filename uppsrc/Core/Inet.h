@@ -1,4 +1,6 @@
 String WwwFormat(Time tm);
+bool   ScanWwwTime(const char *s, Time& tm);
+Time   ScanWwwTime(const char *s);
 
 String MIMECharsetName(byte charset);
 
@@ -8,6 +10,8 @@ String UrlEncode(const String& s);
 String UrlDecode(const char *s, const char *end);
 String UrlDecode(const char *s, int len);
 String UrlDecode(const String& s);
+
+String QPDecode(const char *s);
 
 String Base64Encode(const char *s, const char *end);
 String Base64Encode(const char *s, int len);
@@ -84,6 +88,7 @@ class TcpSocket {
 	char                   *end;
 	bool                    is_eof;
 	bool                    is_error;
+	bool                    is_timeout;
 	bool                    is_abort;
 	bool                    ipv6;
 
@@ -170,7 +175,7 @@ public:
 	int             GetDone() const                          { return done; }
 
 	bool            IsOpen() const                           { return socket != INVALID_SOCKET; }
-	bool            IsEof() const                            { return is_eof && ptr == end; }
+	bool            IsEof() const;
 
 	bool            IsError() const                          { return is_error; }
 	void            ClearError()                             { is_error = false; errorcode = 0; errordesc.Clear(); }
@@ -181,12 +186,15 @@ public:
 	bool            IsAbort() const                          { return is_abort; }
 	void            ClearAbort()                             { is_abort = false; }
 	
+	bool            IsTimeout() const                        { return is_timeout; }
+	
 	SOCKET          GetSOCKET() const                        { return socket; }
 	String          GetPeerAddr() const;
 
 	void            Attach(SOCKET socket);
 	bool            Connect(const char *host, int port);
 	bool            Connect(IpAddrInfo& info);
+	bool            WaitConnect();
 	bool            Listen(int port, int listen_count = 5, bool ipv6 = false, bool reuse = true, void* addr = NULL);
 	bool            Listen(const IpAddrInfo& addr, int port, int listen_count = 5, bool ipv6 = false, bool reuse = true);
 	bool            Accept(TcpSocket& listen_socket);

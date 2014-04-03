@@ -40,8 +40,9 @@ intended to be called from WhenWait routine&]
 [s3; &]
 [s4; &]
 [s5;:TcpSocket`:`:IsEof`(`)const: [@(0.0.255) bool]_[* IsEof]()_[@(0.0.255) const]&]
-[s2;%% Returns true if connection was closed and all peer data were 
-processed.&]
+[s2;%% Returns true if there are no more input data to process. Also 
+returns true if socket is not open, if there was an error or 
+if socket was aborted.&]
 [s3; &]
 [s4; &]
 [s5;:TcpSocket`:`:IsError`(`)const: [@(0.0.255) bool]_[* IsError]()_[@(0.0.255) const]&]
@@ -76,6 +77,10 @@ request are ignored. Intended to be called from WhenWait routine.&]
 [s2;%% Clears the aborted state.&]
 [s3; &]
 [s4; &]
+[s5;:TcpSocket`:`:IsTimeout`(`)const: [@(0.0.255) bool]_[* IsTimeout]()_[@(0.0.255) const]&]
+[s2;%% Returns true if the last operation time`-outed.&]
+[s3; &]
+[s4; &]
 [s5;:TcpSocket`:`:GetSOCKET`(`)const: [_^SOCKET^ SOCKET]_[* GetSOCKET]()_[@(0.0.255) const]&]
 [s2;%% Returns socket handle. Note that all TcpSocket sockets are 
 non`-blocking from host OS perspective.&]
@@ -95,12 +100,19 @@ non`-blocking state.&]
 [s5;:TcpSocket`:`:Connect`(const char`*`,int`): [@(0.0.255) bool]_[* Connect]([@(0.0.255) c
 onst]_[@(0.0.255) char]_`*[*@3 host], [@(0.0.255) int]_[*@3 port])&]
 [s2;%% Connects socket to server at [%-*@3 host]:[%-*@3 port]. This operation 
-is blocking.&]
-[s3;%% &]
+is blocking with respect to resolving host name. Returns true 
+when connection process is successfully started.&]
+[s3; &]
 [s4;%% &]
 [s5;:TcpSocket`:`:Connect`(IpAddrInfo`&`): [@(0.0.255) bool]_[* Connect]([_^IpAddrInfo^ IpA
 ddrInfo][@(0.0.255) `&]_[*@3 info])&]
 [s2;%% Connects socket to server found at [%-*@3 info]. Non`-blocking.&]
+[s3;%% &]
+[s4; &]
+[s5;:TcpSocket`:`:WaitConnect`(`): [@(0.0.255) bool]_[* WaitConnect]()&]
+[s2;%% After Connect returns true, WaitConnect waits for connection 
+to be established. Note that it is only necessary to use WaitConnect 
+if you want to intercept errors before sending/recieving data.&]
 [s3;%% &]
 [s4; &]
 [s5;:TcpSocket`:`:Listen`(int`,int`,bool`,bool`,void`*`): [@(0.0.255) bool]_[* Listen]([@(0.0.255) i
@@ -153,7 +165,9 @@ switches SO`_LINGER off.&]
 [s2;%% Waits for at most timeout for [%-*@3 events], which can be a 
 combination of WAIT`_READ (wait for more input bytes available), 
 WAIT`_WRITE (wait till it is possible to write something to socket). 
-Wait also always returns when socket exception happens.&]
+Wait also always returns when socket exception happens. Returns 
+true if wait was successful (data can be written/read after the 
+wait), false on timeout.&]
 [s3;%% &]
 [s4;%% &]
 [s5;:TcpSocket`:`:WaitRead`(`): [@(0.0.255) bool]_[* WaitRead]()&]

@@ -80,6 +80,7 @@ class XmlParser {
 	bool                      empty_tag;
 	bool                      npreserve, preserveall;
 	bool                      relaxed;
+	bool                      raw;
 
 	int                       line;
 
@@ -92,6 +93,7 @@ class XmlParser {
 	void                      Next();
 	void                      ReadAttr(StringBuffer& b, int c);
 	String                    ReadTag(bool next);
+	String                    ReadEnd(bool next);
 	String                    ReadDecl(bool next);
 	String                    ReadPI(bool next);
 	String                    ReadComment(bool next);
@@ -113,8 +115,13 @@ public:
 	void   PassTag(const char *tag);
 	void   PassTag(const String& tag);
 	bool   IsEnd();
+	String PeekEnd()                                          { return ReadEnd(false); }
+	String ReadEnd()                                          { return ReadEnd(true); }
 	bool   End();
+	bool   End(const char *tag);
+	bool   End(const String& tag);
 	void   PassEnd();
+	void   PassEnd(const char *tag);
 	bool   TagE(const char *tag);
 	void   PassTagE(const char *tag);
 	bool   TagElseSkip(const char *tag);
@@ -148,13 +155,14 @@ public:
 	void   Skip();
 	void   SkipEnd();
 
-	VectorMap<String, String> PickAttrs() pick_;
+	VectorMap<String, String> PickAttrs();
 
 	int    GetLine() const                                    { return line; }
 	int    GetColumn() const                                  { return GetColumn0() + 1; }
 
-	void   Relaxed(bool b)                                    { relaxed = b; }
+	void   Relaxed(bool b = true)                             { relaxed = b; }
 	void   PreserveAllWhiteSpaces(bool b = true)              { preserveall = b; }
+	void   Raw(bool b = true)                                 { raw = b; }
 
 	XmlParser(const char *s);
 	XmlParser(Stream& in);
@@ -212,11 +220,13 @@ public:
 	int            AttrInt(const char *id, int def = Null) const;
 	XmlNode&       SetAttr(const char *id, int val);
 
-	void           SetAttrsPick(pick_ VectorMap<String, String>& a);
+	void           SetAttrsPick(VectorMap<String, String> rval_ a);
 	
 	void           Shrink();
 	
 	bool           IsPicked() const                           { return node.IsPicked(); }
+
+	rval_default(XmlNode);
 
 	XmlNode(const XmlNode& n, int);
 
